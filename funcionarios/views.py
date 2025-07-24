@@ -10,14 +10,18 @@ from django.views.generic.edit import CreateView, DeleteView, UpdateView
 from funcionarios.models import *
 from django.shortcuts import redirect, render
 from django.db.models import Q
+from django.contrib.auth.decorators import login_required
+from django.views.decorators.csrf import csrf_protect, csrf_exempt
 
-
+@login_required(login_url='login/')
+@csrf_exempt
 def procurar_pessoal(request, template_name="funcionarios/fragmentos/procurar/procurar_home.html"):
     if request.method == 'GET':
         menu_ativo = 'PROCURAR'
         lotacoes = Obra.objects.all()
         cargos = Cargo.objects.all()
         situacoes = FuncionarioV2.Situacao
+        funcionarios = FuncionarioV2.objects.all().filter(situacao='ADMITIDO').order_by('nome')
         
         
         context = {
@@ -25,11 +29,20 @@ def procurar_pessoal(request, template_name="funcionarios/fragmentos/procurar/pr
             'lotacoes' : lotacoes,
             'cargos' : cargos,
             'situacoes' : situacoes,
+            'funcionarios' : funcionarios,
      
         }
         return render(request, template_name, context)
+
+@login_required(login_url='login/')
+@csrf_exempt   
+def filtrar_funcionariosV2(request):
     
-def filtrar_funcionariosV2(request, template_name="funcionarios/fragmentos/procurar/resultados_procurar_funcionarios.html"):
+    if request.GET.get('filter') == 'local':
+        template_name="funcionarios/fragmentos/local/resultados_procurar_local.html"
+    else:
+        template_name="funcionarios/fragmentos/procurar/resultados_procurar_funcionarios.html"
+    
     if request.method == 'GET':
 
 
@@ -74,6 +87,8 @@ def filtrar_funcionariosV2(request, template_name="funcionarios/fragmentos/procu
         }
         return render(request, template_name, context)
 
+@login_required(login_url='login/')
+@csrf_exempt
 def cadastrar_funcionarios_pessoal(request, pk=None, template_name= 'funcionarios/fragmentos/funcionarios/funcionarios_home.html'):
     if request.method == 'GET':
         #CADASTRAR NOVO
@@ -92,8 +107,10 @@ def cadastrar_funcionarios_pessoal(request, pk=None, template_name= 'funcionario
         
         #EDITAR FUNCIONÁRIO,
         funcionario_atual = None
+        dependentes = None
         if pk:
           funcionario_atual = FuncionarioV2.objects.get(pk=pk)
+          dependentes = DependenteFuncionariov2.objects.filter(funcionario=funcionario_atual)
         
         context = {
             'menu_ativo' : menu_ativo,
@@ -109,12 +126,42 @@ def cadastrar_funcionarios_pessoal(request, pk=None, template_name= 'funcionario
             'responsavel_direto' : responsavel_direto,
             'start_inputs_dependents' : start_inputs_dependents,
             'funcionario_atual' : funcionario_atual,
+            'dependentes' : dependentes,
         }
         return render(request, template_name, context)
+   
+#EXCLUIR FUNCIONÁRIO NA PAGINA DE EDITAR
+@login_required(login_url='login/')
+@csrf_exempt   
+def excluir_funcionarios_pessoal(request, pk):
+    
+    FuncionarioV2.objects.get(pk=pk).delete()
+    print(f'-------------EXCLUIDO FUNCIONÁRIO')
+    
+    return redirect(reverse('procurar_pessoal'))  
+    
+#EXCLUIR DEPENDENTE DE FUNCIONÁRIO NA PAGINA DE EDITAR
+@login_required(login_url='login/')
+@csrf_exempt  
+def excluir_dependente(request, pkDep, pk):
 
+    DependenteFuncionariov2.objects.get(pk=pkDep).delete()
+    print(f'-------------EXCLUIDO DEPENDENDE')
+        
+    return HttpResponse("Dependente Excluído <button onClick='window.location.reload();'><i class='fas fa-sync-alt'></i></button>")
+ 
+    
+    
+@login_required(login_url='login/')
+@csrf_exempt
 def add_funcionario_v2(request, pk=None):
     
     menu_ativo = 'CADASTRARFUNCIONARIOS'
+    if pk:
+        funcionario_atual = FuncionarioV2.objects.get(pk=pk)
+    else:
+        funcionario_atual = None
+    
     
     if request.htmx:
         #validar Nome vazio
@@ -261,8 +308,8 @@ def add_funcionario_v2(request, pk=None):
                 else:
                     data_fim_prorrogacao = datetime.strptime(request.POST.get('data_fim_prorrogacao'), '%Y-%m-%d')
             else:
-                data_inicio_prorrogacao = ''
-                data_fim_prorrogacao = ''
+                data_inicio_prorrogacao = None
+                data_fim_prorrogacao = None
 
         #validar Data de Admissão
         if request.POST.get('data_admissao') == "":
@@ -321,7 +368,7 @@ def add_funcionario_v2(request, pk=None):
             
         #validar Situacao
         data_demissao = None
-        tipo_demissao = 'COM_JUSTA_CAUSA'
+        tipo_demissao = '-' #DEFAULT
         data_inicio_afastamento = None
         data_fim_afastamento = None
         if request.POST.get('situacao') in ['','-1', None] :
@@ -399,9 +446,7 @@ def add_funcionario_v2(request, pk=None):
             banco = None
         else:
             banco = Banco.objects.get(pk = int(request.POST.get('banco')))
-            
-       
-            
+             
             
         #validar tipo_responsavel
         if request.POST.get('tipo_responsavel') == 'on':
@@ -423,13 +468,32 @@ def add_funcionario_v2(request, pk=None):
         else:
             adicional = float(request.POST.get('adicional').replace('.','').replace(',','.'))  
 
+        print(f"-------------------------- Adicional = {adicional}")
+        
         
         #validar foto
-        if request.FILES.get('imagem') not in ['', None]:
-            foto = request.FILES.get('imagem')
+        if funcionario_atual is not None:
+            if funcionario_atual.foto is None and request.FILES.get('imagem') not in ['', None]:
+                foto = request.FILES.get('imagem')
+            elif funcionario_atual.foto is not None and request.FILES.get('imagem') not in ['', None]:
+                foto = request.FILES.get('imagem')        
+            elif funcionario_atual.foto is None and request.FILES.get('imagem') in ['', None]:
+                foto = None
+            else:
+                foto = funcionario_atual.foto
         else:
-            foto = None 
+                foto = request.FILES.get('imagem')   
+        
+        #validar tipo de Conta
+        tipo_conta = request.POST.get('tipo_conta')
+        if tipo_conta in [-1, '-1', None]:
+            tipo_conta = ''
             
+            
+        #validar tipo PIX
+        tipo_pix = request.POST.get('tipo_pix')
+        if tipo_pix in [ -1, '-1', None]:
+            tipo_pix = ''
                
         rg = request.POST.get('rg', '')
         nome_mae = request.POST.get('nome_mae', '')
@@ -442,11 +506,11 @@ def add_funcionario_v2(request, pk=None):
         telefone2 = request.POST.get('telefone2', '')
               
         agencia = request.POST.get('agencia')
-        tipo_conta = request.POST.get('tipo_conta')
+        
         conta = request.POST.get('conta')
         operacao = request.POST.get('operacao')
         pix = request.POST.get('pix')
-        tipo_pix = request.POST.get('tipo_pix')
+        
         
         esocial = request.POST.get('esocial')
    
@@ -500,14 +564,17 @@ def add_funcionario_v2(request, pk=None):
         
 
         #CRIAR OU EDITAR NOVO FUNCIONÁRIO
-        funcionario_atual, created = FuncionarioV2.objects.update_or_create(pk=pk)
-           
-        if created:
-           funcionario_atual = FuncionarioV2.objects.create(**form_values)
+        funcionario_atual, created = FuncionarioV2.objects.update_or_create(pk=pk,
+                                                                            defaults= {**form_values})
+        #SE 'created' FOR TRUE: CRIA UM NOVO FUNCIONÁRIO   
+        if created:   
+        #    funcionario_atual = FuncionarioV2.objects.create(**form_values)
+           print(f"----- CRIADO FUNCIONÁRIO COM SUCESSO ---- Nome: {nome}")   
+        else:
+           print(f"----- EDITADO FUNCIONÁRIO COM SUCESSO ---- Nome: {nome}")  
         
         
-        
-    print(f"----- CRIADO (EDIT:{created}) FUNCIONÁRIO COM SUCESSO ---- Nome: {nome}")   
+    
     
     #validar Dependentes e CPF
     
@@ -516,6 +583,8 @@ def add_funcionario_v2(request, pk=None):
     
     
     for (nome_dependente, cpf_dependente) in zip(nomes_dependentes,cpfs_dependentes):
+        nome_v = False
+        cpf_v = False
 
         if nome_dependente != "":
             if len(nome_dependente) <= 3:
@@ -523,7 +592,7 @@ def add_funcionario_v2(request, pk=None):
                 'menu_ativo' : menu_ativo,
                 'text_error': "Campo 'Nome do Dependente' muito curto"
                 }
-                
+                nome_v = False
                 response =  render(request, template_name='funcionarios/fragmentos/funcionarios/error_form_funcionario.html', context=context)
                 response['HX-Retarget'] = '#error-container'
                 return response
@@ -532,11 +601,12 @@ def add_funcionario_v2(request, pk=None):
                 'menu_ativo' : menu_ativo,
                 'text_error': "Campo 'CPF do Dependente' Vazio ou Inválido"
                 }
-                
+                nome_v = False
                 response =  render(request, template_name='funcionarios/fragmentos/funcionarios/error_form_funcionario.html', context=context)
                 response['HX-Retarget'] = '#error-container'
                 return response
             else:
+                nome_v = True
                 pass
         
         if cpf_dependente != "":
@@ -545,7 +615,7 @@ def add_funcionario_v2(request, pk=None):
                 'menu_ativo' : menu_ativo,
                 'text_error': "Campo 'Nome do Dependente' Vazio ou muito curto"
                 }
-                
+                cpf_v = False
                 response =  render(request, template_name='funcionarios/fragmentos/funcionarios/error_form_funcionario.html', context=context)
                 response['HX-Retarget'] = '#error-container'
                 return response
@@ -554,18 +624,20 @@ def add_funcionario_v2(request, pk=None):
                 'menu_ativo' : menu_ativo,
                 'text_error': "Campo 'CPF do Dependente' Vazio ou Inválido"
                 }
-                
+                cpf_v = False
                 response =  render(request, template_name='funcionarios/fragmentos/funcionarios/error_form_funcionario.html', context=context)
                 response['HX-Retarget'] = '#error-container'
                 return response  
             else:
+                cpf_v = True
                 pass 
                
         # Criar DEPENDENTES no for
-        dep, created = DependenteFuncionariov2.objects.update_or_create(funcionario = funcionario_atual, 
-                                               nome = nome_dependente, 
-                                               cpf = cpf_dependente)      
-        print(f"----- CRIADO (EDIT:{created}) DEPENDENTE COM SUCESSO ---- Nome: {dep.nome}")  
+        if cpf_v == True and nome_v == True:
+            dep, created = DependenteFuncionariov2.objects.update_or_create(funcionario = funcionario_atual, 
+                                                nome = nome_dependente, 
+                                                cpf = cpf_dependente)      
+            print(f"----- CRIADO (EDIT:{created}) DEPENDENTE COM SUCESSO ---- Nome: {dep.nome}")  
         
     #Criar TIPO Responsável
     if tipo_responsavel:
@@ -574,18 +646,116 @@ def add_funcionario_v2(request, pk=None):
         
         
     return redirect(reverse('procurar_pessoal'))  
-           
+
+@login_required(login_url='login/')
+@csrf_exempt         
 def detalhar_funcionario_v2(request, pk, template_name= 'funcionarios/fragmentos/funcionarios/detalhar_funcionario.html'):
     if request.method == 'GET':
-        menu_ativo = 'CADASTRARCARGOS'
+        menu_ativo = 'PROCURAR'
         funcionario_atual = FuncionarioV2.objects.get(pk = pk)
+        dependentes = DependenteFuncionariov2.objects.filter(funcionario = funcionario_atual)
     
         context = {
             'menu_ativo' : menu_ativo,
             'funcionario_atual' : funcionario_atual,
+            'dependentes' : dependentes,
+        }
+        return render(request, template_name, context)
+
+
+
+@login_required(login_url='login/')
+@csrf_exempt    
+def local_trabalho_pessoal(request, template_name= 'funcionarios/fragmentos/local/local_de_trabalho_home.html'):
+    if request.method == 'GET':
+        menu_ativo = 'LOCALDETRABALHO'
+        funcionarios = FuncionarioV2.objects.all()
+        localidades_distintas = LocalDeTrabalhoFuncionario.objects.values_list('local__local').distinct()
+        localidades = Local.objects.all()
+        
+        funcionarios_livres = FuncionarioV2.get_funcionarios_livres()
+
+        context = {
+            'menu_ativo' : menu_ativo,
+            'localidades' : localidades,
+            'funcionarios' : funcionarios,
+            'localidades_distintas' : localidades_distintas,
+            'funcionarios_livres' : funcionarios_livres,
         }
         return render(request, template_name, context)
     
+@login_required(login_url='login/')
+@csrf_exempt    
+def associar_funcionario_local(request, template_name= 'funcionarios/fragmentos/local/local_de_trabalho_home.html'):
+    
+    if request.method == 'POST':
+        menu_ativo = 'LOCALDETRABALHO'
+        
+        funcionario_aux = request.POST['funcionario'] 
+        local_aux = request.POST['local'] 
+        print(f"{funcionario_aux} - {local_aux}")
+        funcionario_atual = None
+        local_atual = None
+        
+        
+        if funcionario_aux not in ['', '-1', None]:
+            funcionario_atual = FuncionarioV2.objects.get(pk=int(funcionario_aux))
+            
+            
+                
+            #CHECK-BOX SEM LOCAL DEFINIDO
+            sem_local_definido_checkbox = request.POST.get('sem_local_definido_checkbox', False)
+            
+            if sem_local_definido_checkbox is False and local_aux not in ['', '-1', None]:
+                local_atual = Local.objects.get(pk=int(local_aux))    
+                #ASSOCIAR
+                if LocalDeTrabalhoFuncionario.objects.filter(funcionario=funcionario_atual).exists():
+                    update_func = LocalDeTrabalhoFuncionario.objects.get(funcionario= funcionario_atual)
+                    update_func.local = local_atual
+                    update_func.save()
+                
+                else:
+                    LocalDeTrabalhoFuncionario.objects.create(funcionario= funcionario_atual, local = local_atual)
+                
+            
+            elif sem_local_definido_checkbox is not False:
+                    update_func = LocalDeTrabalhoFuncionario.objects.get(funcionario= funcionario_atual)
+                    update_func.delete()
+            else:
+                return HttpResponse("Erro: Local não Encontrado!")
+                
+        else:
+            return HttpResponse("Erro: Funcionário não Encontrado!")
+        
+        context = {
+            'menu_ativo' : menu_ativo
+        }
+        return redirect(reverse('local_trabalho_pessoal'))  
+
+       
+@login_required(login_url='login/')
+@csrf_exempt    
+def imprimir_locais_funcionarios(request, template_name= 'funcionarios/fragmentos/local/impressao_local_de_trabalho_home.html'):
+    if request.method == 'GET':
+        menu_ativo = 'LOCALDETRABALHO'
+        funcionarios = FuncionarioV2.objects.all()
+        localidades_distintas = LocalDeTrabalhoFuncionario.objects.values_list('local__local').distinct()
+        localidades = Local.objects.all()
+        
+        funcionarios_livres = FuncionarioV2.get_funcionarios_livres()
+
+        context = {
+            'menu_ativo' : menu_ativo,
+            'localidades' : localidades,
+            'funcionarios' : funcionarios,
+            'localidades_distintas' : localidades_distintas,
+            'funcionarios_livres' : funcionarios_livres,
+        }
+        return render(request, template_name, context)
+    
+    
+@login_required(login_url='login/')
+@csrf_exempt    
 def cadastrar_cargo_pessoal(request, template_name= 'funcionarios/fragmentos/cargos/cargos_home.html'):
     if request.method == 'GET':
         menu_ativo = 'CADASTRARCARGOS'
@@ -595,6 +765,8 @@ def cadastrar_cargo_pessoal(request, template_name= 'funcionarios/fragmentos/car
         }
         return render(request, template_name, context)
 
+@login_required(login_url='login/')
+@csrf_exempt
 def impressoes_pessoal(request, template_name= 'funcionarios/fragmentos/impressoes/impressoes_home.html'):
     if request.method == 'GET':
         menu_ativo = 'IMPRESSÃO'
@@ -604,6 +776,8 @@ def impressoes_pessoal(request, template_name= 'funcionarios/fragmentos/impresso
         }
         return render(request, template_name, context)
 
+@login_required(login_url='login/')
+@csrf_exempt
 def relatorios_pessoal(request, template_name= 'funcionarios/fragmentos/relatorios/relatorios_home.html'):
     if request.method == 'GET':
         menu_ativo = 'RELATÓRIO'
@@ -612,7 +786,8 @@ def relatorios_pessoal(request, template_name= 'funcionarios/fragmentos/relatori
             'menu_ativo' : menu_ativo
         }
         return render(request, template_name, context)
-       
+
+      
 def add_inputs_dependente(request, id, template_name= 'funcionarios/fragmentos/funcionarios/novo_dependente.html'):
     if request.method == 'GET':
         context = {

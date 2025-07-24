@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load widget_tweaks %}
+
+{% block styleHead %}
+<style>
+    .elementToFadeInAndOut {
+        opacity: 0;
+        animation: fade 5s linear;
+    }
+    
+    
+    @keyframes fade {
+      0% { opacity: 0 }
+      10% { opacity: 1 }
+      90% { opacity: 1 }
+      100% { opacity: 0 }
+    }
+
+    .bttSimoGG {
+        background-color: #4CAF50; /* Green */
+        border: none;
+        color: white;
+        padding: 15px 32px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 16px;
+        border-radius: 4px;
+      } 
+</style>
+{% endblock %}
+
+{% block breadcrumb %}
+<div class="row">
+    <nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/">Financeiro</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Relatórios</li>
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+
+{% block conteudo %}
+<ul class="nav nav-tabs mb-3" id="myTab">
+    <li class="nav-item">
+        <a href="{% url 'resumo-do-dia' %}" class="nav-link">Resumo do Dia</a>
+    </li>
+    <li class="nav-item">
+        <a href="{% url 'contas-atrasadas' %}" class="nav-link">Contas Atrasadas</a>
+    </li>
+    <li class="nav-item">
+        <a href="{% url 'inserir-conta-a-pagar' %}" class="nav-link">Nova Conta</a>
+    </li>
+    <li class="nav-item">
+        <a href="{% url 'contas-a-pagar' %}" class="nav-link">Todas as Contas</a>
+    </li>
+    <li class="nav-item">
+        <a href="{% url 'relatorios-inicio' %}" class="nav-link active" data-bs-toggle="tab">Relatórios</a>
+    </li>
+</ul>
+
+
+<div class="tab-content">
+    <div class="tab-pane fade show active" id="tab-ativa" style="margin-left:2em; margin-right:2em;">
+    
+        <div class="col-3">
+            <label for="situacao" class="form-label">Tipo de Relatório: </label>
+            <select class="form-select form-select-sm" aria-label="Default select example" name="select-relatorios"
+                hx-get="{% url 'get-relatorio-selecionado' %}" 
+                hx-target="#relatorio-select" 
+                hx-swap="innerHTML" 
+                hx-trigger="change">
+                <option value="1" selected> Busca de Itens Avançado</option>
+                <option value="2"> Relatório de Fornecedor</option>
+                <option value="3"> Relatório por Período Específico</option>
+            </select>
+        </div> 
+ 
+    </div>
+
+    <div class="row" style="">
+        <div class="col-12" id="relatorio-select">
+            {% include 'financeiro/relatorios/fragmentos/busca-item-avancado.html' %}       
+        </div>
+    </div>
+</div>
+
+
+{% endblock%}
+
+
+{% block jquery %}
+<script>
+    
+ 
+   
+    //CANCELAR TECLA ENTER NO FORMULÁRIO
+    window.document.onkeydown = CheckEnter;
+    function CheckEnter(){
+       if(event.keyCode == 13)
+            return false;
+       return true;
+    }
+</script>  
+
+{% endblock %}

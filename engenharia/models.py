@@ -12,6 +12,28 @@ SITUAÇÃO = (
         ('3', "Paralisado"),
     )
 
+class DiarioDeObraContrato(models.Model):
+
+    # class Meta:
+    #     managed = True
+    #     db_table = 'engenharia_diariodeobracontrato'
+
+    obra = models.ForeignKey(Obra, on_delete=models.SET_NULL, null=True)
+    data = models.DateField(null=True, blank=True)
+    atividades = models.TextField(max_length=500, null=True, blank=True)
+    usuario = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    ordem_servico = models.CharField(max_length=200, null=True, blank=True)   
+    tempo_manha =  models.CharField(max_length=200, null=True, blank=True)
+    tempo_tarde =  models.CharField(max_length=200, null=True, blank=True)
+    equipamentos = models.TextField(max_length=500, null=True, blank=True)
+    mao_de_obra = models.TextField(max_length=500, null=True, blank=True)
+    ocorrencias = models.TextField(max_length=1000, null=True, blank=True)
+
+class ServiçosDiarioDeObraContrato(models.Model):
+    local = models.ForeignKey(Local, on_delete=models.SET_NULL, null=True)
+    servicos = models.TextField(max_length=500, null=True, blank=True)
+    mao_de_obra = models.TextField(max_length=500, null=True, blank=True)
+
 class OrdemServicoObras(models.Model):
     numero_os = models.IntegerField(blank=True, null=True)
     solicitante = models.CharField(max_length=200, null=True) 
@@ -45,8 +67,7 @@ class OrdemServicoObras(models.Model):
                 if self.situacao == s[0]:
                     print('------------', s[0], ' e ', s[1])
                     return s[1]
-                    
-            
+                          
     def get_files_by_os(self):
         arquivos = DocumentoOS.objects.filter(ordem_servico=self)
         return arquivos
@@ -73,7 +94,7 @@ class FuncionarioOS(models.Model):
         return self.funcionario.nome
 
 class CategoriaImagem(models.Model):
-    categoria = models.CharField(max_length=200, null=True)
+    categoria = models.CharField(max_length=100, null=True)
     ordem_servico = models.ForeignKey(OrdemServicoObras, on_delete=models.SET_NULL, null=True)
    
     
@@ -84,8 +105,6 @@ class CategoriaImagem(models.Model):
     
     def __str__(self) -> str:
         return self.categoria
-
-
 
 
 def def_pasta_upload_imagem(instance, name):
@@ -123,7 +142,7 @@ class DocumentoOS(models.Model):
             return extension
 
 class DiarioDeObraOs(models.Model):
-    data = models.DateField(default=datetime.now().strftime("%d/%m/%Y"))
+    data = models.DateField(null=True, blank=True)
     atividades = models.TextField(max_length=500, null=True, blank=True)
     usuario = models.ForeignKey(User, on_delete=PROTECT)
     ordem_servico = models.ForeignKey(OrdemServicoObras, on_delete=models.SET_NULL, null=True)   
@@ -133,3 +152,6 @@ class DiarioDeObraOs(models.Model):
     mao_de_obra = models.TextField(max_length=500, null=True, blank=True)
     ocorrencias = models.TextField(max_length=1000, null=True, blank=True)
     fotos = models.ForeignKey(CategoriaImagem, on_delete=SET_NULL, null=True)
+    
+
+    

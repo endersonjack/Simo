@@ -18,18 +18,31 @@
     
 }
 
+.htmx-indicator{
+    display:none;
+}
+.htmx-request .htmx-indicator{
+    display:inline;
+}
+.htmx-request.htmx-indicator{
+    display:inline;
+}
+
 </style>
 {% endblock %}
 
 {% block conteudo %}
+    
+    
+
     <!-- MENU PESSOAL --> 
     {% include "funcionarios/fragmentos/menu_pessoal.html" %}
 
 
-    <div class="container mb-3">
+    <div class="container content mb-3">
 
-        
         <div class="d-flex flex-row mt-2">
+            
             
             {% if funcionario_atual %}
                 <h6 class=""><i class="fas fa-edit"></i> Editar Funcionário (ID: {{funcionario_atual.pk}})</h6> 
@@ -45,17 +58,41 @@
                     {% include "funcionarios/fragmentos/funcionarios/error_form_funcionario.html" %}
                 </span>
                 
+                <img class="htmx-indicator" id="indicator" src="{% static 'imagens/bars.svg' %}">
                 {% if funcionario_atual %}
-                    <button form="addFormFuncionariov2" class="btn btn-sm btn-primary"><i class="fas fa-save"></i> Editar Funcionário</button>
+                    
+                    <button form="editFormFuncionariov2"  class="btn btn-sm btn-primary" name="btt_save_edit_func"><i class="fas fa-save"></i> Salvar Edição Funcionário</button>
                 {% else %}
-                    <button form="addFormFuncionariov2" class="btn btn-sm btn-success"><i class="fas fa-save"></i> Salvar Funcionário</button>
+                
+                    <button form="addFormFuncionariov2"  class="btn btn-sm btn-success" name="btt_save_func"><i class="fas fa-save"></i> Salvar Funcionário</button>
                 {% endif %}
                
                 
             </div>   
         </div> 
 
- <form id="addFormFuncionariov2" hx-post="{% url 'add_funcionario_v2' funcionario_atual.pk %}" hx-target="body" hx-trigger="submit">
+        <!-- INÍCIO FORMULÁRIO DE CADASTRO DE FUNCIONÁRIOS-->
+        {% if funcionario_atual %}
+            <form id="editFormFuncionariov2" 
+                hx-post="{% url 'add_funcionario_v2' funcionario_atual.pk %}" 
+                hx-target="body" 
+                hx-trigger="submit throttle:1s"
+                hx-include="[name='imagem']" 
+                hx-indicator="#indicator"
+                hx-sync="closest form:abort"
+                enctype="multipart/form-data"
+                >
+        {% else %}
+            <form id="addFormFuncionariov2" 
+                hx-post="{% url 'add_funcionario_v2' %}" 
+                hx-target="body" 
+                hx-trigger="submit throttle:1s"
+                hx-include="[name='imagem']"
+                hx-indicator="#indicator"  
+                hx-sync="closest form:abort"
+                enctype="multipart/form-data"
+                >
+        {% endif %}
 
         <!--NAV-TABS FUNCIONÁRIOS-->
         <ul class="nav nav-tabs" id="ex1" role="tablist">
@@ -137,8 +174,8 @@
 
                 <div class="col-2 text-center">
                     
-                <!--Button Modal ADICIONARFOTO-->  
-                    <div class="card" style="width: 10rem; height: 13rem;">
+                <!--Button Modal ADICIONAR FOTO-->  
+                    <div class="card" style="width: 9rem; height: 13rem;">
 
                     {% if funcionario_atual.foto %}
                         <a title="Trocar Foto" data-bs-toggle="modal" data-bs-target="#modalAdicionarFoto" href="trocar_Foto" title="Trocar Foto de Funcionário" class="">
@@ -147,7 +184,7 @@
                     {% else %}
                     <a title="Adicionar Foto" data-bs-toggle="modal" data-bs-target="#modalAdicionarFoto" href="adicionar_Foto" title="Adicionar Foto de Funcionário" class="">
 
-                        <span id="text-add-foto" style="position: absolute;top: 45%;left: 23%;color:gray;">Adicionar foto</span>
+                        <span id="text-add-foto" style="position: absolute;top: 45%;left: 20%;color:gray;">Adicionar foto</span>
                         <img id="preview-image" src="" >  
                     {% endif %} 
                     </a> 
@@ -254,7 +291,7 @@
                             <div class="col-5">
                                 <label for="nome_pai"  class="form-label">Nome do Pai: </label>
                                 <input value="{% if funcionario_atual.nome_pai %}{{funcionario_atual.nome_pai}}{% endif %}"
-                                    type="text" class="form-control form-control-sm phoneBR" id="nome_pai" name="nome_pai">                                    
+                                    type="text" class="form-control form-control-sm " id="nome_pai" name="nome_pai">                                    
                             </div>
 
                         </div>
@@ -319,13 +356,13 @@
                                
                         <div class="col-2">
                             <label for="salario" class="form-label">Salário: <span class="text-danger fw-bold">*</span></label>
-                            <input value="{% if funcionario_atual.salario %}{{funcionario_atual.salario}}{% endif %}"
+                            <input value="{% if funcionario_atual.salario %}{{funcionario_atual.salario|floatformat:2}}{% endif %}"
                                 type="text" placeholder="R$ " class="form-control form-control-sm money" id="salario" name="salario">
                         </div>
     
                         <div class="col-2">
                             <label for="adicional" class="form-label">Adicional:</label>
-                            <input value="{% if funcionario_atual.adicional %}{{funcionario_atual.adicional}}{% endif %}"
+                            <input value="{% if funcionario_atual.adicional %}{{funcionario_atual.adicional|floatformat:2}}{% endif %}"
                                 type="text" placeholder="R$ " class="form-control form-control-sm money" id="adicional" name="adicional">
                         </div>
     
@@ -357,25 +394,24 @@
                             <label for="situacao" class="form-label">Situação: <span class="text-danger fw-bold">*</span></label>
                             <select class="form-select form-select-sm" aria-label="Default select example" id="situacao" name="situacao">
                                 
-                                {% for i in situacao %}
-
+                                
+                                {% if funcionario_atual.situacao %} 
+                                
+                                    {% for i in situacao %} 
+ 
+                                    <option value="{{i}}"  {% if funcionario_atual.situacao == i %}selected{% endif %} > {{i}}</option>
+                                           
+                                    {% endfor %}
+                                
+                                {% else %}
                                     
-                                    {% if funcionario_atual.situacao %}
+                                    {% for i in situacao %} 
+                                    <option value="{{i}}"  {% if i == 'ADMITIDO' %}selected{% endif %} > {{i}}</option>
+                                    {% endfor %}
 
-                                        <option value="{{funcionario_atual.situacao}}" selected> {{funcionario_atual.situacao}}</option>
-                                        
-                                    {% else %}
+                                {% endif %}
 
-                                        {% if i == 'ADMITIDO' %}
-                                        <option value="{{i}}" selected> {{i}}</option>
-                                        {% else %}
-                                        <option value="{{i}}"> {{i}}</option>
-                                        {% endif %}
-                                        
-                                    {% endif %}
-                                        
-                                    
-                                {% endfor %}
+
                             </select>
                     </div>
                     <div class="col-2">
@@ -477,6 +513,34 @@
 <!--FIM DADOS BANCÁRIOS-->
 <!--DEPENDENTES-->            
         <div class="tab-pane fade" id="ex1-tabs-4" role="tabpanel" aria-labelledby="ex1-tab-4">
+
+           
+            {% if dependentes %}
+                {% for dependente in dependentes %}
+
+                <div class="d-flex flex-row align-items-center" >
+                    <div class="col-6 p-2">
+                        <label for="nome_dependente" class="form-label">Nome do Dependente:</label>
+                        <input type="text" class="form-control form-control-sm" value="{{dependente.nome}}" disabled>
+                    </div>
+            
+                    <div class="col-3 p-2">
+                        <label for="cpf_dependente" class="form-label">CPF do Dependente:</label>
+                        <input type="text" class="form-control form-control-sm" value="{{dependente.cpf}}" disabled>
+                    </div>
+            
+                    <button class="btn bg-transparent" 
+                        hx-delete="{% url 'excluir_dependente' funcionario_atual.pk dependente.pk %}"
+                        hx-target="#delete-info" 
+                        hx-swap="innerHTML"
+                        hx-confirm="Tem certeza que deseja excluir o DEPENDENTE {{dependente.nome}}?"><i class="fas fa-trash"></i></button>
+                </div>
+                            
+                
+                {% endfor %}
+
+
+            {% endif %}
                
           
             <div class="row mb-2">
@@ -495,6 +559,7 @@
     
           </div>
           
+          <div id="delete-info" style="color:red"></div>
 
         </div>
 <!--FIM DEPENDENTES-->    
@@ -546,8 +611,12 @@
         <div class="col-2 p-2 align-self-center">
             <div class="form-check mt-3">
                 <label class="form-check-label">
+                {% if funcionario_atual %}
                 <input class="form-check-input " type="checkbox" {% if funcionario_atual.ativo %}checked{% endif %} disabled> Cadastro Ativo <i class="fas fa-question-circle" title="Falar com o Admin para Desativar Cadastro"></i>
-                </label>
+                {% else %}
+                <input class="form-check-input " type="checkbox" checked disabled> Cadastro Ativo <i class="fas fa-question-circle" title="Falar com o Admin para Desativar Cadastro"></i>
+                {% endif %}
+            </label>
             </div>    
         </div> 
        
@@ -568,7 +637,7 @@
 
 </div>
 
- <!-- Modal ADICIONARFOTO-->
+ <!-- Modal ADICIONAR FOTO-->
  <div class="modal fade" id="modalAdicionarFoto" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content ">
@@ -586,7 +655,9 @@
 
                 <div class="col-md">
                     <label for="img-input" class="">Imagem:</label>
-                    <input type="file" name="imagem" class="form-control form-control-sm" id="img-input" accept="image/*" /> 
+
+                        <input type="file" name="imagem"  class="form-control form-control-sm" id="img-input" accept="image/*" /> 
+        
                     <small class="small-error" id="error_imagem"></small>
                 </div>
 
@@ -611,6 +682,20 @@
 {% block jquery %}
 <script>
 
+
+    
+    //mantém o refresh da pagina na mesma TAB ATIVA
+    $(document).ready(function () {
+        $('.nav-link').on('click', function (e) {
+            localStorage.setItem('activeTab', $(this).attr('href'));
+            $(this).tab('show');
+        });
+    
+        var activeTab = localStorage.getItem('activeTab');
+        if (activeTab) {
+            $('#ex1 a[href="' + activeTab + '"]').tab('show');
+        }
+    });
 
 
     //masks

@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-
+{% load static %}
 
 {% block breadcrumb %}
 <div class="row">
@@ -59,10 +59,10 @@
     <a class="m-1 btn btn-p-sm btn-success" href="{% url 'inserir-conta-a-pagar' %}">Nova Nota</a>
 
     <!-- Button Modal desconto-->
-    <a class="m-1 btn btn-p-sm btn-primary" data-bs-toggle="modal" data-bs-target="#inserirDescontoNotaCompleta{{nota_atual.pk}}" href="desconto">Desconto</a>
-
+    <a class="m-1 btn btn-p-sm btn-primary" data-bs-toggle="modal" data-bs-target="#inserirDescontoNotaCompleta" href="desconto">Desconto</a>
+  <small> Para resetar o desconto, coloque '0' (zero) como valor.</small>
      <!-- Modal desconto-->
-      <div class="modal fade" id="inserirDescontoNotaCompleta{{nota_atual.pk}}" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal fade" id="inserirDescontoNotaCompleta" tabindex="-9999999" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog ">
             <div class="modal-content ">
                 <div class="modal-header p-3">
@@ -80,7 +80,7 @@
                     
                         <div class="col-8">
                         <label for="input4" class="fw-bold">Desconto R$:</label>
-                        <input class="form-control form-control-sm nodot" name="desconto" type="number" step="any" min="0" id="input4" type="text" autocomplete="off" required>
+                        <input class="form-control form-control-sm money nodot" name="desconto"  id="input4" type="text" autocomplete="off" required>
                       </div>
 
                     </form>
@@ -102,7 +102,7 @@
     </div>
     
     <div class="ms-auto bd-highlight">
-      {% if not nota_atual.pago %}
+
       <a class="m-1 btn btn-p-sm btn-primary" href="{% url 'editar-saida' nota_atual.pk %}">Editar Dados da Nota</a>
       <a class="m-1 btn btn-p-sm btn-danger" 
       hx-delete="{% url 'excluir-saida' nota_atual.pk %}"
@@ -110,9 +110,7 @@
       hx-target="body"
       hx-swap="innerHTML"
       hx-confirm="Tem certeza que deseja EXCLUIR Nota nº {{nota_atual.pk}} de valor {{nota_atual.valor_BR}}?">Excluir Nota</a>
-      {% else %}
-       <small><i>*Para qualquer alteração, é preciso excluir o pagamento primeiro.</i></small>
-      {% endif %}
+
     </div>
     
   </div>
@@ -323,15 +321,25 @@
 <div class="" style="margin-left:2em; margin-right:2em;"><i>Saida Cód.: {{nota_atual.pk}} | {% if pagamento %} Pagamento Cód.: {{pagamento.pk}} | {% else %}{% endif %}  Cadastrado por: {{nota_atual.usuario.username}}</i></div>
 
 {% endblock%}
+<script src="{% static 'js/jquery-3.6.0.min.js' %}"></script>  
 {% block jquery %}
 <script>
-  //DESATIVAR '.' (DOT) NOS INPUTS
-  $(".nodot").on("keypress", function(evt) {
-   var keycode = evt.charCode || evt.keyCode;
-   if (keycode == 46) {
-   return false;
-   }
-   });
+  $(document).ready(function () {
+    //masks
+    $('.money').mask('000.000.000,00', {
+      reverse: true
+    });
+
+
+    //DESATIVAR '.' (DOT) NOS INPUTS
+    $(".nodot").on("keypress", function(evt) {
+    var keycode = evt.charCode || evt.keyCode;
+    if (keycode == 46) {
+    return false;
+    }
+    });
+
+  });
 </script>
 
 {% endblock%}

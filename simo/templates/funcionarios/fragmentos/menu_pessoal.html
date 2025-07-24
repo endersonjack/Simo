@@ -10,6 +10,10 @@
     ._menu_ativo:hover{
         background-color:gray;
     }
+    span.disable-links {
+        pointer-events: none;
+        opacity:0.2;
+    }
 
 </style>
 {% endblock %}
@@ -28,36 +32,44 @@
         </a>
 
         <a  class="btn  btn-dark m-1 _menu {% if menu_ativo == 'CADASTRARFUNCIONARIOS' %} _menu_ativo{% endif %}" href="{% url 'cadastrar_funcionarios_pessoal' %}" 
-            title="Cadastrar Itens">
+            title="Cadastrar Funcionário">
             <div class="d-flex flex-column">
             <span style="width:6rem"><i class="fas fa-user-alt"></i></span>
             + Funcionário
             </div>
         </a>
 
-        <a  class="btn  btn-dark m-1 _menu {% if menu_ativo == 'CADASTRARCARGOS' %} _menu_ativo{% endif %}" href="{% url 'cadastrar_cargo_pessoal' %}" 
-            title="Cadastrar Categorias">
+        <a  class="btn  btn-dark m-1 _menu {% if menu_ativo == 'LOCALDETRABALHO' %} _menu_ativo{% endif %}" href="{% url 'local_trabalho_pessoal' %}" 
+            title="Local de Trabalho">
+            <div class="d-flex flex-column">
+            <span style="width:6rem"><i class="fas fa-map-marker-alt"></i></span>
+            Local
+            </div>
+        </a>
+
+        <a  class="btn  btn-dark m-1 _menu {% if menu_ativo == 'CADASTRARCARGOS' %} _menu_ativo{% endif %}" href="{% url 'inserir-cargo' %}" 
+            title="Cadastrar Cargos">
             <div class="d-flex flex-column">
             <span style="width:5rem"><i class="fas fa-hard-hat"></i></span>
             + Cargos
             </div>
         </a>
 
-        <a  class="btn  btn-dark m-1 _menu {% if menu_ativo == 'IMPRESSÃO' %} _menu_ativo{% endif %}" href="{% url 'impressoes_pessoal' %}" 
+        <span class="disable-links"> <a  class="btn  btn-dark m-1 _menu {% if menu_ativo == 'IMPRESSÃO' %} _menu_ativo{% endif %}" href="{% url 'impressoes_pessoal' %}" 
             title="Impressões">
             <div class="d-flex flex-column">
             <span style="width:5rem"><i class="fas fa-print"></i></span>
             Impressões
             </div>
-        </a>
+        </a></span>
 
-        <a  class="btn  btn-dark m-1 _menu {% if menu_ativo == 'RELATÓRIO' %} _menu_ativo{% endif %}" href="{% url 'relatorios_pessoal' %}" 
+        <span class="disable-links"> <a  class="btn  btn-dark m-1 _menu {% if menu_ativo == 'RELATÓRIO' %} _menu_ativo{% endif %}" href="{% url 'relatorios_pessoal' %}" 
             title="Relatório">
             <div class="d-flex flex-column">
             <span style="width:5rem"><i class="far fa-file-alt"></i></span>
             Relatórios
             </div>
-        </a>
+        </a></span>
     </div>
 </div>
 </div> 
