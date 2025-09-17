@@ -17,3 +17,6 @@ uwsgi_params
 simo/uwsgi_params
 simo/.env
 simo/media/
+
+get-pip.py
+get-pip.py.1

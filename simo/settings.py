@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 from django.contrib.messages import constants as messages
 from decouple import config, Csv
+import pymysql
 
 
 MESSAGE_TAGS = {
@@ -185,3 +186,6 @@ LOGOUT_REDIRECT_URL = 'login'
 LOGIN_URL = 'login'
 
 TEMPLATE_DEBUG = DEBUG
+
+
+pymysql.install_as_MySQLdb()

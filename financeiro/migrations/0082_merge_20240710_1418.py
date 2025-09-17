@@ -6,8 +6,7 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('financeiro', '0075_notacompleta_desconto_and_more'),
-        ('financeiro', '0081_notacompleta_desconto'),
+              ('financeiro', '0081_notacompleta_desconto'),
     ]
 
     operations = [

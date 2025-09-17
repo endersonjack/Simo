@@ -11,7 +11,7 @@ from funcionarios.models import Funcionario
 from obras.models import Local, Obra
 from django.db.models import Sum, Count, F, Q
 from requisicao.models import ItemRequisicao, Requisicao
-from django_htmx.http import HttpResponseClientRedirect, push_url
+from django_htmx.http import HttpResponseClientRedirect
 from django.core.cache import cache
 from django.contrib.auth.models import User
 
