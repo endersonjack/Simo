@@ -1,35 +1,36 @@
 <div id="modais-retirar-ferramenta">
+  {% for ferr in ferramentas_acauteladas %}
     <div class="modal fade"
-         id="retirarFerramentaDaCautela-{{cautela_atual.pk}}-{{ferr.pk}}"
+         id="retirarFerramentaDaCautela-{{ cautela_atual.pk }}-{{ ferr.pk }}"
          tabindex="-1"
-         aria-labelledby="label-retirar-{{cautela_atual.pk}}-{{ferr.pk}}"
+         aria-labelledby="label-retirar-{{ cautela_atual.pk }}-{{ ferr.pk }}"
          aria-hidden="true">
-      <div class="modal-dialog ">
-        <div class="modal-content ">
+      <div class="modal-dialog">
+        <div class="modal-content">
           <div class="modal-header p-3">
-            <h5 id="label-retirar-{{cautela_atual.pk}}-{{ferr.pk}}" class="modal-title" style="color:black">
-              RETIRAR FERRAMENTA DA CAUTELA nº {{cautela_atual.pk}}
-            </h5>
+            <h5 id="label-retirar-{{ cautela_atual.pk }}-{{ ferr.pk }}" class="modal-title">RETIRAR FERRAMENTA DA CAUTELA nº {{ cautela_atual.pk }}</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
           </div>
 
           <div class="modal-body p-5 text-center">
             <span class="text-danger">Você tem certeza que deseja RETIRAR a Ferramenta?</span><br>
-            <span class="fw-bold">{{ferr.ferramenta.descricao}}</span><br>
-            Cor: {{ferr.ferramenta.cor|default_if_none:"-"}} |
-            Tamanho: {{ferr.ferramenta.tamanho|default_if_none:"-"}} |
-            Série: {{ferr.ferramenta.numeracao|default_if_none:"-"}}
+            <span class="fw-bold">{{ ferr.ferramenta.descricao }}</span><br>
+            Cor: {{ ferr.ferramenta.cor|default_if_none:"-" }} |
+            Tamanho: {{ ferr.ferramenta.tamanho|default_if_none:"-" }} |
+            Série: {{ ferr.ferramenta.numeracao|default_if_none:"-" }}
           </div>
 
           <div class="modal-footer form-control">
-            <a class="btn btn-sm btn-danger"
-               href="{% url 'retirar_ferramenta_cautela' ferr.cautela.pk ferr.pk %}">
-              <i class="fas fa-times"></i> Retirar
-            </a>
+            <form method="post" action="{% url 'retirar_ferramenta_cautela' pk=cautela_atual.pk ferr=ferr.pk %}">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-sm btn-danger">
+                <i class="fas fa-times"></i> Retirar
+              </button>
+            </form>
             <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Fechar</button>
           </div>
         </div>
       </div>
     </div>
+  {% endfor %}
 </div>
-

@@ -1,6 +1,6 @@
 from datetime import timedelta
 from decimal import Decimal
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
 from django.urls import reverse
@@ -14,7 +14,7 @@ from requisicao.models import ItemRequisicao, Requisicao
 from django_htmx.http import HttpResponseClientRedirect
 from django.core.cache import cache
 from django.contrib.auth.models import User
-
+from django.views.decorators.http import require_POST
 from simo.utils import gerar_pdf_by_template
 from django.contrib.sites.shortcuts import get_current_site
 
@@ -798,29 +798,24 @@ def inserir_ferramenta_em_cautela(request, pk, ferr, template_name = 'estoque_v2
             
     
 @login_required(login_url='login/')
-@csrf_exempt
+@require_POST
 def retirar_ferramenta_cautela(request, pk, ferr):
+    # Garante que o ferr pertence à cautela (evita 404 confuso e remoções erradas)
+    cf = get_object_or_404(CautelaFerramenta, pk=ferr, cautela_id=pk)
 
-    if request.method == 'GET':
-        ferr = CautelaFerramenta.objects.get(pk=ferr)
-        ferramenta_atual = ferr.ferramenta
-        cautela_atual = ferr.cautela
-        
-        #retirar CautelaFerramenta
-        ferr.delete()
-        
-        ferramenta_atual.acautelada = False
-        ferramenta_atual.save()
-        
-        
-        #verificar se a cautela está vazia
-   
-        # if not cautela_atual.get_ferramentas().exists():
-           
-        #     cautela_atual.ativa = False
-        #     cautela_atual.save()
-        
-        return redirect('detalhar_cautela_ferramenta', pk = cautela_atual.pk) 
+    ferramenta = cf.ferramenta
+    cautela = cf.cautela
+
+    cf.delete()
+    ferramenta.acautelada = False
+    ferramenta.save()
+
+    # (opcional) se quiser desativar cautela vazia:
+    # if not CautelaFerramenta.objects.filter(cautela=cautela).exists():
+    #     cautela.ativa = False
+    #     cautela.save()
+
+    return redirect('detalhar_cautela_ferramenta', pk=cautela.pk)
             
     
 @login_required(login_url='login/')
