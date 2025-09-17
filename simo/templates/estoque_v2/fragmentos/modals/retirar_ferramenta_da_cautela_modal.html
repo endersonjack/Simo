@@ -8,7 +8,9 @@
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header p-3">
-            <h5 id="label-retirar-{{ cautela_atual.pk }}-{{ ferr.pk }}" class="modal-title">RETIRAR FERRAMENTA DA CAUTELA nº {{ cautela_atual.pk }}</h5>
+            <h5 id="label-retirar-{{ cautela_atual.pk }}-{{ ferr.pk }}" class="modal-title">
+              RETIRAR FERRAMENTA DA CAUTELA nº {{ cautela_atual.pk }}
+            </h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
           </div>
 
@@ -21,7 +23,8 @@
           </div>
 
           <div class="modal-footer form-control">
-            <form method="post" action="{% url 'retirar_ferramenta_cautela' pk=cautela_atual.pk ferr=ferr.pk %}">
+            <form method="post"
+                  action="{% url 'retirar_ferramenta_cautela' pk=cautela_atual.pk ferr=ferr.pk %}">
               {% csrf_token %}
               <button type="submit" class="btn btn-sm btn-danger">
                 <i class="fas fa-times"></i> Retirar

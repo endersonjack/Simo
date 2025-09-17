@@ -185,14 +185,14 @@
                         {% for ferr in ferramentas_acauteladas  %}
                        <tr class=''>
                            <!-- Botao Modal VER FERRAMENTA DA CAUTELA -->
-                          <td class=""><a data-bs-toggle="modal" data-bs-target="#detalharFerramentaEstoquev2{{ferr.ferramenta.pk}}" href="ver-ferramenta">{{ferr.ferramenta.descricao|default_if_none:"-"}}</a></td>
+                          <td class=""><a data-bs-toggle="modal" data-bs-target="#detalharFerramentaEstoquev2{{ferr.ferramenta.pk}}" href="#">{{ferr.ferramenta.descricao|default_if_none:"-"}}</a></td>
                           <td class="">{{ferr.ferramenta.marca|default_if_none:"-"}}</td>
                           <td class="text-center">Cor: {{ferr.ferramenta.cor|default_if_none:""}}</td>
                           <td class="text-center">{{ferr.ferramenta.numeracao|default_if_none:"-"}}</td>
                           <td class="text-center">
                             <!-- Botao Modal RETIRAR FERRAMENTA DA CAUTELA -->
-                            <a class="text-danger m-1" data-bs-toggle="modal" data-bs-target="#retirarFerramentaDaCautela-{{cautela_atual.pk}}-{{ferr.pk}}" href="retirar-ferramenta" title="Retirar Ferramenta"><i class="fas fa-trash"></i></a>
-                            <a class="text-primary" data-bs-toggle="modal" data-bs-target="#detalharFerramentaEstoquev2{{ferr.ferramenta.pk}}" href="ver-ferramenta" title="Ver Ferramenta"><i class="fas fa-arrow-circle-right"></i></a>
+                            <a class="text-danger m-1" data-bs-toggle="modal" data-bs-target="#retirarFerramentaDaCautela-{{cautela_atual.pk}}-{{ferr.pk}}" href="#" title="Retirar Ferramenta"><i class="fas fa-trash"></i></a>
+                            <a class="text-primary" data-bs-toggle="modal" data-bs-target="#detalharFerramentaEstoquev2{{ferr.ferramenta.pk}}" href="#" title="Ver Ferramenta"><i class="fas fa-arrow-circle-right"></i></a>
                             <!-- Modal RETIRAR FERRAMENTA DA CAUTELA-->
                             {% include "estoque_v2/fragmentos/modals/retirar_ferramenta_da_cautela_modal.html" %}
                              <!-- Modal VER FERRAMENTA DA CAUTELA -->
