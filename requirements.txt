@@ -60,6 +60,7 @@ pycrypto==2.6.1
 PyJWT==1.5.3
 pylint==2.9.3
 pymemcache==3.5.0
+pymysql==1.1.2
 pyOpenSSL==17.5.0
 pyphen==0.11.0
 pypng==0.0.20
